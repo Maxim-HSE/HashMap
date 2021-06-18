@@ -1,4 +1,3 @@
-#include"pch.h"
 #include<vector>
 #include<string>
 #include<list>
