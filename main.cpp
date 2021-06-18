@@ -1,3 +1,4 @@
+#include"pch.h"
 #include<vector>
 #include<string>
 #include<list>
@@ -28,200 +29,55 @@ private:
 			}
 		}
 	}
-using veclistpair = vector<list<pair<const KeyType, ValueType>>>;
+	using veclistpair = vector<list<pair<const KeyType, ValueType>>>;
 public:
-	class iterator {
-	private:
-		HashMap<KeyType, ValueType, hash<KeyType>> *link;
-		typename veclistpair::iterator first;
-		typename list<pair<const KeyType, ValueType>>::iterator second;
- 
-	public:
-		iterator() {
- 
-		}
-		iterator(HashMap<KeyType, ValueType, hash<KeyType>> *t1,
-			typename veclistpair::iterator t2,
-			typename list<pair<const KeyType, ValueType>>::iterator t3) {
-			this->link = t1;
-			this->first = t2;
-			this->second = t3;
-		}
-		iterator(const iterator &h) {
-			this->link = h.link;
-			this->first = h.first;
-			this->second = h.second;
-		}
-		bool operator ==(iterator h) {
-			return (this->first == h.first) && (this->second == h.second);
-		}
-		bool operator !=(iterator h) {
-			return !(*this == h);
-		}
-		pair<const KeyType, ValueType> operator*() {
-			return *(this->second);
-		}
-		typename list<pair<const KeyType, ValueType>>::iterator operator->() {
-			return this->second;
-		}
-		pair<const KeyType, ValueType> operator &() {
-			return *this->second;
-		}
-		iterator operator++() {
-			++this->second;
-			if (this->second == this->first->end()) {
-				auto h1 = this->first;
-				while (h1 != link->lists.end()) {
-					auto r = h1;
-					++h1;
-					if (h1 == link->lists.end()) {
-						this->first = r;
-						this->second = this->first->end();
-						return *this;
-					}
-					if (h1->size() != 0) {
-						this->first = h1;
-						this->second = this->first->begin();
-						return *this;
-					}
-				}
-			}
-			else {
-				return *this;
-			}
-		}
-		iterator operator++(int) {
-			iterator pred = *this;
-			++this;
-			return pred;
-		}
-	};
-	using constpair = vector<list<const pair<const KeyType, ValueType>>>;
-	class const_iterator {
-	private:
-		HashMap<KeyType, ValueType, hash<KeyType>> *link;
-		typename constpair::iterator first;
-		typename list<const pair<const KeyType, ValueType>>::iterator second;
-	public:
-		const_iterator() {
- 
-		}
-		const_iterator(HashMap<KeyType, ValueType, hash<KeyType>> *t1,
-			typename vector<list<const pair<const KeyType, ValueType>>>::iterator t2,
-			typename list<const pair<const KeyType, ValueType>>::iterator t3) {
-			this->link = t1;
-			this->first = t2;
-			this->second = t3;
-		}
-		const_iterator(const const_iterator &h) {
-			this->link = h.link;
-			this->first = h.first;
-			this->second = h.second;
-		}
-		bool operator ==(const_iterator h) const {
-			return this->first == h.first && this->second == h.second;
-		}
-		const_iterator operator =(const_iterator h) {
-			this->link = h.link;
-			this->first = h.first;
-			this->second = h.second;
-		}
-		bool operator !=(const_iterator h) const {
-			return !(*this == h);
-		}
-		typename list<const pair<const KeyType, ValueType>>::const_iterator operator ->() const {
-			return this->second;
-		}
-		const pair<const KeyType, ValueType> operator &() const {
-			return *this->second;
-		}
-		const pair<const KeyType, ValueType> operator*() {
-			return this->second;
-		}
-		const_iterator operator++() {
-			++this->second;
-			if (this->second == this->first->end()) {
-				auto h1 = this->first;
-				while (h1 != link->lists.end()) {
-					auto r = h1;
-					++h1;
-					if (h1 == link->lists.end()) {
-						this->first = r;
-						this->second = this->first->end();
-						return *this;
-					}
-					if (h1->size() != 0) {
-						this->first = h1;
-						this->second = this->first->begin();
-						return *this;
-					}
-				}
-			}
-			else {
-				return *this;
-			}
-		}
-		const_iterator operator++(int) {
-			const_iterator pred = *this;
-			++this;
-			return pred;
-		}
-	};
+
+	using iterator = typename std::list<std::pair<const KeyType, ValueType>>::iterator;
+
+	using const_iterator = typename std::list<std::pair<const KeyType, ValueType>>::const_iterator;
+
 	iterator begin() {
-		if (elements == 0) {
-			return end();
-		}
-		for (int i = 0; i < lists.size(); ++i) {
-			if (lists[i].size() > 0) {
-				iterator ans(this, lists.begin() + i, lists[i].begin());
-				return ans;
-			}
-		}
+		return lists[0].begin();
 	}
+
 	const_iterator begin() const {
-		if (elements == 0) {
+		return lists[0].begin();
+	}
+
+	iterator end() {
+		return lists[lists.size() - 1].end();
+	}
+
+	const_iterator end() const {
+		return lists[lists.size() - 1].end();
+	}
+
+	iterator find(const KeyType key) {
+		if (number == 0) {
 			return end();
 		}
-		for (int i = 0; i < lists.size(); ++i) {
-			if (lists[i].size() > 0) {
-				const_iterator ans(this, lists.begin() + i, lists[i].begin());
-				return ans;
+		int hash = f(key) % number;
+		iterator it = lists[hash].begin();
+		while (it != lists[hash].end()) {
+			if (it->first == key) {
+				return it;
+			}
+			++it;
+		}
+		return end();
+	}
+
+	const_iterator find(const KeyType key) const {
+		if (number == 0) {
+			return end();
+		}
+		int hash = hasher(key) % number;
+		for (auto iter : lists[hash]) {
+			if (iter->first == key) {
+				return iter;
 			}
 		}
-	}
-	iterator end() {
-		iterator h(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return h;
-	}
-	const_iterator end() const {
-		const_iterator h(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return h;
-	}
-	iterator find(KeyType key) {
-		int pos = f(key) % number;
-		for (auto t = lists[pos].begin(); t != lists[pos].end(); ++t) {
-			if (t->first == key) {
-				iterator ans(this, lists.begin() + pos, t);
-				return ans;
-			}
-		}
-		iterator ans(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return ans;
-	}
-	const_iterator find(KeyType key) const {
-		int pos = f(key) % number;
-		const_iterator ans;
-		ans.link = *this;
-		for (auto t = lists[pos].begin(); t != lists[pos].end(); ++t) {
-			if (t->first == key) {
-				ans.first = *lists[pos];
-				ans.second = t;
-				return ans;
-			}
-		}
-		ans.first = *lists[lists.size() - 1];
-		ans.second = ans.first->end();
-		return ans;
+		return end();
 	}
 	HashMap(Hash h = Hash()) {
 		elements = 0;
@@ -342,7 +198,7 @@ public:
 		lists.resize(1);
 	}
 };
- 
+
 int main()
 {
 	ios_base::sync_with_stdio(0);
