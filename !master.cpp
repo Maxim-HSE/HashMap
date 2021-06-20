@@ -13,221 +13,78 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> >
 class HashMap {
 private:
 	vector<list<pair<const KeyType, ValueType>>> lists;
-	int num = 1;
-	int empt = 0;
+	int number = 1;
+	int elements = 0;
 	Hash f;
 	void resize(int new_size) {
 		vector<list<pair<const KeyType, ValueType>>> t1 = lists;
 		lists.clear();
 		lists.resize(new_size);
-		num = new_size;
+		number = new_size;
 		for (auto t : t1) {
 			for (auto t2 : t) {
-				int pos = f(t2.first) % num;
+				int pos = f(t2.first) % number;
 				lists[pos].push_back(t2);
 			}
 		}
 	}
+	using veclistpair = vector<list<pair<const KeyType, ValueType>>>;
 public:
-	class iterator {
-	private:
-		HashMap<KeyType, ValueType, hash<KeyType>> *link;
-		typename vector<list<pair<const KeyType, ValueType>>>::iterator f1;
-		typename list<pair<const KeyType, ValueType>>::iterator f2;
 
-	public:
-		iterator() {
+	using iterator = typename std::list<std::pair<const KeyType, ValueType>>::iterator;
 
-		}
-		iterator(HashMap<KeyType, ValueType, hash<KeyType>> *t1,
-			typename vector<list<pair<const KeyType, ValueType>>>::iterator t2,
-			typename list<pair<const KeyType, ValueType>>::iterator t3) {
-			this->link = t1;
-			this->f1 = t2;
-			this->f2 = t3;
-		}
-		iterator(const iterator &h) {
-			this->link = h.link;
-			this->f1 = h.f1;
-			this->f2 = h.f2;
-		}
-		bool operator ==(iterator h) {
-			return (this->f1 == h.f1) && (this->f2 == h.f2);
-		}
-		bool operator !=(iterator h) {
-			return !(*this == h);
-		}
-		pair<const KeyType, ValueType> operator*() {
-			return *(this->f2);
-		}
-		typename list<pair<const KeyType, ValueType>>::iterator operator ->() {
-			return this->f2;
-		}
-		pair<const KeyType, ValueType> operator &() {
-			return *this->f2;
-		}
-		iterator operator++() {
-			++this->f2;
-			if (this->f2 == this->f1->end()) {
-				auto h1 = this->f1;
-				while (h1 != link->lists.end()) {
-					auto r = h1;
-					++h1;
-					if (h1 == link->lists.end()) {
-						this->f1 = r;
-						this->f2 = this->f1->end();
-						return *this;
-					}
-					if (h1->size() != 0) {
-						this->f1 = h1;
-						this->f2 = this->f1->begin();
-						return *this;
-					}
-				}
-			}
-			else {
-				return *this;
-			}
-		}
-		iterator operator++(int) {
-			iterator pred = *this;
-			++this;
-			return pred;
-		}
-	};
-	class const_iterator {
-	private:
-		HashMap<KeyType, ValueType, hash<KeyType>> *link;
-		typename vector<list<const pair<const KeyType, ValueType>>>::iterator f1;
-		typename list<const pair<const KeyType, ValueType>>::iterator f2;
-	public:
-		const_iterator() {
+	using const_iterator = typename std::list<std::pair<const KeyType, ValueType>>::const_iterator;
 
-		}
-		const_iterator(HashMap<KeyType, ValueType, hash<KeyType>> *t1,
-			typename vector<list<const pair<const KeyType, ValueType>>>::iterator t2,
-			typename list<const pair<const KeyType, ValueType>>::iterator t3) {
-			this->link = t1;
-			this->f1 = t2;
-			this->f2 = t3;
-		}
-		const_iterator(const const_iterator &h) {
-			this->link = h.link;
-			this->f1 = h.f1;
-			this->f2 = h.f2;
-		}
-		bool operator ==(const_iterator h) const {
-			return this->f1 = h.f1 && this->f2 = h.f2;
-		}
-		const_iterator operator =(const_iterator h) {
-			this->link = h.link;
-			this->f1 = h.f1;
-			this->f2 = h.f2;
-		}
-		bool operator !=(const_iterator h) const {
-			return !(*this == h);
-		}
-		typename list<const pair<const KeyType, ValueType>>::const_iterator operator ->() const {
-			return this->f2;
-		}
-		const pair<const KeyType, ValueType> operator &() const {
-			return *this->f2;
-		}
-		const pair<const KeyType, ValueType> operator*() {
-			return this->f2;
-		}
-		const_iterator operator++() {
-			++this->f2;
-			if (this->f2 == this->f1->end()) {
-				auto h1 = this->f1;
-				while (h1 != link->lists.end()) {
-					auto r = h1;
-					++h1;
-					if (h1 == link->lists.end()) {
-						this->f1 = r;
-						this->f2 = this->f1->end();
-						return *this;
-					}
-					if (h1->size() != 0) {
-						this->f1 = h1;
-						this->f2 = this->f1->begin();
-						return *this;
-					}
-				}
-			}
-			else {
-				return *this;
-			}
-		}
-		const_iterator operator++(int) {
-			const_iterator pred = *this;
-			++this;
-			return pred;
-		}
-	};
 	iterator begin() {
-		if (empt == 0) {
-			return end();
-		}
-		for (int i = 0; i < lists.size(); ++i) {
-			if (lists[i].size() > 0) {
-				iterator ans(this, lists.begin() + i, lists[i].begin());
-				return ans;
-			}
-		}
+		return lists[0].begin();
 	}
+
 	const_iterator begin() const {
-		if (empt == 0) {
+		return lists[0].begin();
+	}
+
+	iterator end() {
+		return lists[lists.size() - 1].end();
+	}
+
+	const_iterator end() const {
+		return lists[lists.size() - 1].end();
+	}
+
+	iterator find(const KeyType key) {
+		if (number == 0) {
 			return end();
 		}
-		for (int i = 0; i < lists.size(); ++i) {
-			if (lists[i].size() > 0) {
-				const_iterator ans(this, lists.begin() + i, lists[i].begin());
-				return ans;
+		int hash = f(key) % number;
+		iterator it = lists[hash].begin();
+		while (it != lists[hash].end()) {
+			if (it->first == key) {
+				return it;
+			}
+			++it;
+		}
+		return end();
+	}
+
+	const_iterator find(const KeyType key) const {
+		if (number == 0) {
+			return end();
+		}
+		int hash = hasher(key) % number;
+		for (auto iter : lists[hash]) {
+			if (iter->first == key) {
+				return iter;
 			}
 		}
-	}
-	iterator end() {
-		iterator h(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return h;
-	}
-	const_iterator end() const {
-		const_iterator h(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return h;
-	}
-	iterator find(KeyType key) {
-		int pos = f(key) % num;
-		for (auto t = lists[pos].begin(); t != lists[pos].end(); ++t) {
-			if (t->first == key) {
-				iterator ans(this, lists.begin() + pos, t);
-				return ans;
-			}
-		}
-		iterator ans(this, lists.begin() + (lists.size() - 1), lists[lists.size() - 1].end());
-		return ans;
-	}
-	const_iterator find(KeyType key) const {
-		int pos = f(key) % num;
-		const_iterator ans;
-		ans.link = *this;
-		for (auto t = lists[pos].begin(); t != lists[pos].end(); ++t) {
-			if (t->first == key) {
-				ans.f1 = *lists[pos];
-				ans.f2 = t;
-				return ans;
-			}
-		}
-		ans.f1 = *lists[lists.size() - 1];
-		ans.f2 = ans.f1->end();
-		return ans;
+		return end();
 	}
 	HashMap(Hash h = Hash()) {
-		empt = 0;
+		elements = 0;
 		f = h;
 		lists.resize(1);
 	}
 	HashMap(iterator beg, iterator endd, Hash h = Hash()) {
-		empt = 0;
+		elements = 0;
 		f = h;
 		lists.resize(1);
 		for (iterator t = beg; t != endd; ++t) {
@@ -243,7 +100,7 @@ public:
 		}
 	}
 	HashMap(pair<KeyType, ValueType> *begin, pair<KeyType, ValueType> *end, Hash h = Hash()) {
-		empt = 0;
+		elements = 0;
 		f = h;
 		lists.resize(1);
 		for (auto t = begin; t != end; ++t) {
@@ -251,7 +108,7 @@ public:
 		}
 	}
 	HashMap(initializer_list<pair<KeyType, ValueType>> sp) {
-		empt = 0;
+		elements = 0;
 		f = Hash();
 		lists.resize(1);
 		for (auto t : sp) {
@@ -259,16 +116,16 @@ public:
 		}
 	}
 	const int size() {
-		return empt;
+		return elements;
 	}
 	const bool empty() {
-		if (empty == 0) {
+		if (elements == 0) {
 			return 0;
 		}
 		return 1;
 	}
 	const bool empty() const {
-		if (empty == 0) {
+		if (elements == 0) {
 			return 0;
 		}
 		return 1;
@@ -280,27 +137,27 @@ public:
 		return f;
 	}
 	void insert(const pair<KeyType, ValueType> sp) {
-		int pos = f(sp.first) % num;
+		int pos = f(sp.first) % number;
 		for (auto t : lists[pos]) {
 			if (t.first == sp.first) {
 				return;
 			}
 		}
 		lists[pos].push_back(sp);
-		++empt;
-		if (empt * 2 >= num) {
-			resize(num * 2);
+		++elements;
+		if (elements * 2 >= number) {
+			resize(number * 2);
 		}
 	}
 	void erase(const KeyType &sp) {
-		int pos = f(sp) % num;
+		int pos = f(sp) % number;
 		auto it1 = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == sp) {
-				--empt;
+				--elements;
 				lists[pos].erase(it1);
-				if (empt * 4 < num) {
-					resize(num / 2);
+				if (elements * 4 < number) {
+					resize(number / 2);
 				}
 				return;
 			}
@@ -310,7 +167,7 @@ public:
 	ValueType& operator [] (KeyType type) {
 		ValueType h = ValueType();
 		insert({ type, h });
-		int pos = f(type) % num;
+		int pos = f(type) % number;
 		auto it1 = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == type) {
@@ -320,7 +177,7 @@ public:
 		}
 	}
 	const ValueType& at(const KeyType &type) const {
-		int pos = f(type) % num;
+		int pos = f(type) % number;
 		auto it = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == type) {
@@ -332,9 +189,9 @@ public:
 		throw std::out_of_range("NOT_CE");
 	}
 	void clear() {
-		empt = 0;
-		num = 1;
-		for (int i = 0; i < num; ++i) {
+		elements = 0;
+		number = 1;
+		for (int i = 0; i < number; ++i) {
 			lists[i].clear();
 		}
 		lists.resize(1);
