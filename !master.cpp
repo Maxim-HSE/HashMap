@@ -13,22 +13,22 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> >
 class HashMap {
 private:
 	vector<list<pair<const KeyType, ValueType>>> lists;
-	int number = 1;
-	int elements = 0;
+	int memory = 1;
+	int num_elements = 0;
 	Hash f;
 	void resize(int new_size) {
 		vector<list<pair<const KeyType, ValueType>>> t1 = lists;
 		lists.clear();
 		lists.resize(new_size);
-		number = new_size;
+		memory = new_size;
 		for (auto t : t1) {
 			for (auto t2 : t) {
-				int pos = f(t2.first) % number;
+				int pos = f(t2.first) % memory;
 				lists[pos].push_back(t2);
 			}
 		}
 	}
-	using veclistpair = vector<list<pair<const KeyType, ValueType>>>;
+	//using veclistpair = vector<list<pair<const KeyType, ValueType>>>;
 public:
 
 	using iterator = typename std::list<std::pair<const KeyType, ValueType>>::iterator;
@@ -50,13 +50,8 @@ public:
 	const_iterator end() const {
 		return lists[lists.size() - 1].end();
 	}
-
-	iterator find(const KeyType key) {
-		if (number == 0) {
-			return end();
-		}
-		int hash = f(key) % number;
-		iterator it = lists[hash].begin();
+	template< class T >
+	T findpos(T it, const KeyType key, int hash) {
 		while (it != lists[hash].end()) {
 			if (it->first == key) {
 				return it;
@@ -65,26 +60,30 @@ public:
 		}
 		return end();
 	}
-
-	const_iterator find(const KeyType key) const {
-		if (number == 0) {
+	iterator find(const KeyType key) {
+		if (memory == 0) {
 			return end();
 		}
-		int hash = hasher(key) % number;
-		for (auto iter : lists[hash]) {
-			if (iter->first == key) {
-				return iter;
-			}
+		int hash = f(key) % memory;
+		iterator it = lists[hash].begin();
+		return findpos(it, key, hash);
+	}
+
+	const_iterator find(const KeyType key) const {
+		if (memory == 0) {
+			return end();
 		}
-		return end();
+		int hash = hasher(key) % memory;
+		const_iterator it = lists[hash].begin();
+		return findpos(it, key, hash);
 	}
 	HashMap(Hash h = Hash()) {
-		elements = 0;
+		num_elements = 0;
 		f = h;
 		lists.resize(1);
 	}
 	HashMap(iterator beg, iterator endd, Hash h = Hash()) {
-		elements = 0;
+		num_elements = 0;
 		f = h;
 		lists.resize(1);
 		for (iterator t = beg; t != endd; ++t) {
@@ -100,7 +99,7 @@ public:
 		}
 	}
 	HashMap(pair<KeyType, ValueType> *begin, pair<KeyType, ValueType> *end, Hash h = Hash()) {
-		elements = 0;
+		num_elements = 0;
 		f = h;
 		lists.resize(1);
 		for (auto t = begin; t != end; ++t) {
@@ -108,7 +107,7 @@ public:
 		}
 	}
 	HashMap(initializer_list<pair<KeyType, ValueType>> sp) {
-		elements = 0;
+		num_elements = 0;
 		f = Hash();
 		lists.resize(1);
 		for (auto t : sp) {
@@ -116,16 +115,16 @@ public:
 		}
 	}
 	const int size() {
-		return elements;
+		return num_elements;
 	}
 	const bool empty() {
-		if (elements == 0) {
+		if (num_elements == 0) {
 			return 0;
 		}
 		return 1;
 	}
 	const bool empty() const {
-		if (elements == 0) {
+		if (num_elements == 0) {
 			return 0;
 		}
 		return 1;
@@ -137,27 +136,25 @@ public:
 		return f;
 	}
 	void insert(const pair<KeyType, ValueType> sp) {
-		int pos = f(sp.first) % number;
-		for (auto t : lists[pos]) {
-			if (t.first == sp.first) {
-				return;
-			}
+		if (find(sp.first) != end()) {
+			return;
 		}
+		int pos = f(sp.first) % memory;
 		lists[pos].push_back(sp);
-		++elements;
-		if (elements * 2 >= number) {
-			resize(number * 2);
+		++num_elements;
+		if (num_elements * 2 >= memory) {
+			resize(memory * 2);
 		}
 	}
 	void erase(const KeyType &sp) {
-		int pos = f(sp) % number;
+		int pos = f(sp) % memory;
 		auto it1 = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == sp) {
-				--elements;
+				--num_elements;
 				lists[pos].erase(it1);
-				if (elements * 4 < number) {
-					resize(number / 2);
+				if (num_elements * 4 < memory) {
+					resize(memory / 2);
 				}
 				return;
 			}
@@ -167,7 +164,7 @@ public:
 	ValueType& operator [] (KeyType type) {
 		ValueType h = ValueType();
 		insert({ type, h });
-		int pos = f(type) % number;
+		int pos = f(type) % memory;
 		auto it1 = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == type) {
@@ -177,7 +174,7 @@ public:
 		}
 	}
 	const ValueType& at(const KeyType &type) const {
-		int pos = f(type) % number;
+		int pos = f(type) % memory;
 		auto it = lists[pos].begin();
 		for (auto t : lists[pos]) {
 			if (t.first == type) {
@@ -189,9 +186,9 @@ public:
 		throw std::out_of_range("NOT_CE");
 	}
 	void clear() {
-		elements = 0;
-		number = 1;
-		for (int i = 0; i < number; ++i) {
+		num_elements = 0;
+		memory = 1;
+		for (int i = 0; i < memory; ++i) {
 			lists[i].clear();
 		}
 		lists.resize(1);
